@@ -1,0 +1,170 @@
+{
+  "name": "album",
+  "version": 33,
+  "source-key": {
+    "type": "figma",
+    "file": "Al9P5i3aLECa2JLme8amdS",
+    "node": "4:2",
+    "version": "2190572980982736762",
+    "component-id": "26b700f1d19a0295809915723bfe5cced1e2c7d5"
+  },
+  "default": "Album",
+  "design": {
+    "atoms": [
+      {
+        "type": "group",
+        "id": "top_level",
+        "root": "true"
+      },
+      {
+        "type": "text",
+        "id": "Hurry Up Tomorrow"
+      },
+      {
+        "type": "text",
+        "id": "The Weeknd"
+      },
+      {
+        "type": "image",
+        "id": "Hurry Up Tomorrow 1"
+      }
+    ],
+    "modes": {
+      "Album": {
+        "rules": [
+          {
+            "id": "top_level",
+            "is-structured": false,
+            "children": [
+              "Hurry Up Tomorrow",
+              "The Weeknd",
+              "Hurry Up Tomorrow 1"
+            ],
+            "clip-content": false
+          },
+          {
+            "id": "Hurry Up Tomorrow",
+            "margin": {
+              "top": 137.0,
+              "bottom": 7.0
+            },
+            "drop-shadow": {
+              "color": {
+                "alpha": 1.0,
+                "hue": 258.43575418994413,
+                "saturation": 1.0,
+                "value": 0.7019607843137254
+              },
+              "blur": 0.30000001192092896,
+              "offset-x": 0.0,
+              "offset-y": 0.0,
+              "spread": 0.0,
+              "blend-mode": "normal"
+            },
+            "size-constraints": {
+              "width-constraints": {
+                "sizing-mode": "proportional",
+                "value": 1.0
+              },
+              "height-constraints": {
+                "sizing-mode": "proportional",
+                "value": 1.0
+              }
+            },
+            "color": {
+              "alpha": 1.0,
+              "hue": 0.0,
+              "saturation": 0.0,
+              "value": 1.0
+            },
+            "text-content": "Hurry Up Tomorrow",
+            "overflow": "visible",
+            "max-lines": -1,
+            "text-align-vertical": "center",
+            "text-size": 12.0,
+            "line-height": 1.2029999097188313,
+            "typeface": "Actor"
+          },
+          {
+            "id": "The Weeknd",
+            "margin": {
+              "top": 165.0,
+              "right": 1.0
+            },
+            "drop-shadow": {
+              "color": {
+                "alpha": 1.0,
+                "hue": 258.43575418994413,
+                "saturation": 1.0,
+                "value": 0.7019607843137254
+              },
+              "blur": 0.30000001192092896,
+              "offset-x": 0.0,
+              "offset-y": 0.0,
+              "spread": 0.0,
+              "blend-mode": "normal"
+            },
+            "size-constraints": {
+              "width-constraints": {
+                "sizing-mode": "proportional",
+                "value": 1.0
+              },
+              "height-constraints": {
+                "sizing-mode": "proportional",
+                "value": 1.0
+              }
+            },
+            "color": {
+              "alpha": 1.0,
+              "hue": 0.0,
+              "saturation": 0.0,
+              "value": 1.0
+            },
+            "text-content": "The Weeknd",
+            "overflow": "visible",
+            "max-lines": -1,
+            "text-align-vertical": "center",
+            "text-size": 12.0,
+            "line-height": 1.2029999097188313,
+            "typeface": "Actor"
+          },
+          {
+            "id": "Hurry Up Tomorrow 1",
+            "border-radius": 25.0,
+            "size-constraints": {
+              "width-constraints": {
+                "sizing-mode": "proportional",
+                "value": 1.0
+              },
+              "height-constraints": {
+                "sizing-mode": "fixed",
+                "value": 134.0
+              }
+            },
+            "stroke-width": 2.0,
+            "stroke-color": {
+              "alpha": 0.4980392156862745,
+              "hue": 0.0,
+              "saturation": 0.0,
+              "value": 1.0
+            },
+            "image-content": "hurry_up_tomorrow_1.png",
+            "scale": "cover"
+          }
+        ]
+      }
+    }
+  },
+  "previews": [
+    {
+      "design": "Album",
+      "size": {
+        "width": 134.0,
+        "height": 172.0
+      }
+    }
+  ],
+  "adin-component-search-paths": [],
+  "image-search-paths": [],
+  "vector-search-paths": []
+}
