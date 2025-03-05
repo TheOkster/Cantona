@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.ContentUris
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Paint.Align
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,13 +15,19 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,11 +39,14 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -66,24 +77,64 @@ enum class Screen(){
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val exoPlayer: ExoPlayer = ExoPlayer.Builder(this).build()
+        val viewModel: CantonaViewModel = CantonaViewModel(exoPlayer)
+
         enableEdgeToEdge()
         setContent {
             CantonaTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
-                    CantonaApp()
+                    CantonaApp(viewModel)
                 }
             }
         }
     }
 }
 @Composable
-fun CantonaApp() {
+fun PlayButton(viewModel: CantonaViewModel, modifier: Modifier = Modifier){
+    val metadata by viewModel.metadataState.collectAsState()
+    val isPlaying by viewModel.isPlaying.collectAsState()
+    val iconColor = MaterialTheme.colorScheme.onSurface
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()){
+        Text("${metadata.title ?: "Unknown"}", style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.weight(0.15f))
+
+        Text("${metadata.artist ?: "Unknown"}", style = MaterialTheme.typography.bodyMedium)
+        Spacer(modifier = Modifier.weight(1f))
+
+        // TODO: change to use resource strings
+        Row(horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxHeight().padding(end=12.dp)) {
+            Icon(
+                painterResource(R.drawable.baseline_fast_rewind_24),
+                "Rewind",
+                tint = iconColor
+            ) // Not Functional
+            IconButton(
+                onClick = { viewModel.player.playWhenReady = !isPlaying }
+            ) {
+                Icon(
+                    painterResource(
+                        if (isPlaying) R.drawable.baseline_pause_24
+                        else R.drawable.baseline_play_arrow_24
+                    ), "Play/Pause", tint = iconColor
+                )
+            }
+            Icon(
+                painterResource(R.drawable.baseline_fast_forward_24),
+                "Fast Forward",
+                tint = iconColor
+            ) // Not Functional
+        }
+    }
+}
+@Composable
+fun CantonaApp(viewModel: CantonaViewModel) {
     val context = LocalContext.current
     val songs = getAudioFiles(context)
     val albums = songs.groupBy { it.albumID }
     val albumMap: MutableMap<Long, Album> = mutableMapOf()
-    val exoplayer = ExoPlayer.Builder(context).build()
-    val mediaSession = MediaSession.Builder(context, exoplayer).build()
+//    val mediaSession = MediaSession.Builder(context, exoplayer).build()
 
     for(entry in albums){
         if(entry.key != null) albumMap[entry.key!!] = getAlbum(context, entry.key!!, entry.value)
@@ -93,97 +144,15 @@ fun CantonaApp() {
         val navController = rememberNavController()
         NavHost(navController = navController, startDestination = Screen.Albums.name) {
             composable(Screen.Albums.name) {
-                AlbumsScreen(albumMap, navController)
+                AlbumsScreen(albumMap, navController, viewModel)
             }
             composable("${Screen.Songs.name}/{albumId}") { backStackEntry ->
                 val albumId = backStackEntry.arguments?.getString("albumId")?.toLongOrNull() ?: return@composable
-                albumMap[albumId]?.let { it1 -> SongsScreen(it1, exoplayer) }
+                albumMap[albumId]?.let { it1 -> SongsScreen(it1, viewModel) }
             }
         }
     }
 }
-@Composable
-fun AlbumsScreen(albumMap: Map<Long, Album>, navController: NavController, modifier: Modifier = Modifier){
-    LazyVerticalGrid(columns= GridCells.Adaptive(minSize=200.dp), modifier = modifier) {
-        items(albumMap.values.toList()) {
-            AlbumBlock(
-                album = it, onClick = {navController.navigate("${Screen.Songs.name}/${it.albumId}")
-                }
-            )
-        }
-    }
-}
-@Composable
-fun SongsScreen(album: Album, exoPlayer: ExoPlayer, modifier: Modifier = Modifier){
-    Box(modifier=modifier.fillMaxWidth()) {
-        Column(modifier = Modifier
-            .fillMaxWidth(0.8f)
-            .align(Alignment.Center)) {
-            AlbumArt(album.albumId, modifier = Modifier.aspectRatio(1f))
-            Text(
-                text = album.title, color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 30.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier,
-            )
-            Text(
-                text = album.artist,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 18.sp,
-            )
-            if (album.year != null) {
-                Text(
-                    text = album.year.toString(),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 18.sp,
-                )
-            }
-            LazyColumn(modifier = modifier) {
-                items(album.songs) { it ->
-                    SongDisplay(
-                        song = it, exoPlayer = exoPlayer
-                    )
-                }
-            }
-        }
-    }
-}
-@Preview
-@Composable
-fun SongsScreenPreview(album: Album = Album(0, listOf(Song(title="Naked in Manhattan", artist="Chappell Roan")))){
-    SongsScreen(album, ExoPlayer.Builder(LocalContext.current).build())
-}
-@Composable
-fun SongDisplay(
-    song: Song, exoPlayer: ExoPlayer,
-    modifier: Modifier = Modifier
-) {
-    Column {
-        Row(
-            modifier = modifier
-                .border(2.dp, Color.hsv(0f, 0f, 1f, .25f), RoundedCornerShape(8.dp))
-                .fillMaxWidth()
-                .padding(vertical = 12.dp)
-                .clickable {
-                    if (song.uri != Uri.EMPTY) {
-                        exoPlayer.apply {
-                            val mediaItem = MediaItem.fromUri(song.uri)
-                            setMediaItem(mediaItem)
-                            prepare()
-                            play()
-                        }
-                        Log.d("Player", "Should be playing...")
-                    }
-                    Log.d("Player", "Empty URI")
-                },
-        ) {
-            Text(text = song.title ?: "N/A", fontSize = 20.sp)
-            Text(song.artist ?: "N/A", fontSize = 20.sp)
-        }
-    }
-}
-
-
 
 
 fun getAudioFiles(context: Context): List<Song> {
@@ -199,9 +168,9 @@ fun getAudioFiles(context: Context): List<Song> {
     )
 
     val selection = "${Media.IS_MUSIC} != 0"
-    val selectionArgs = arrayOf("%/Music/%")
+    val selectionArgs = arrayOf("%/Music/%") // Plan to utilize later
 
-    val sortOrder = "${Media.DISPLAY_NAME} ASC"
+    val sortOrder = "${Media.DISPLAY_NAME} ASC" // Will likely change
 
     val uri = Media.EXTERNAL_CONTENT_URI
 
@@ -212,6 +181,9 @@ fun getAudioFiles(context: Context): List<Song> {
         null,
         sortOrder
     )?.use { cursor ->
+        // Plan to switch this into a more malleable implementaiton
+        // Currently manually gets the column index for each metadata category
+        // and gets it from the cursor if it can
         val idColumn = cursor.getColumnIndex(Media._ID)
         val songNameColumn = cursor.getColumnIndex(Media.TITLE)
         val albumColumn = cursor.getColumnIndex(Media.ALBUM)
@@ -244,7 +216,8 @@ fun getAudioFiles(context: Context): List<Song> {
 @Composable
 fun RequestPermissions() {
     val context = LocalContext.current
-    var permissionToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+    val permissionToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_AUDIO
     } else {
         Manifest.permission.READ_EXTERNAL_STORAGE
@@ -270,17 +243,17 @@ fun RequestPermissions() {
             launcher.launch(permissionToRequest)
         }
     }
-    permissionToRequest = Manifest.permission.POST_NOTIFICATIONS
-     launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        hasPermission = isGranted
-    }
-
-    LaunchedEffect(hasPermission) {
-        if (!hasPermission) {
-            launcher.launch(permissionToRequest)
-        }
-    }
-
+    // Can only be used with Tiramisu apparently, need to change
+//    permissionToRequest = Manifest.permission.POST_NOTIFICATIONS
+//     launcher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.RequestPermission()
+//    ) { isGranted: Boolean ->
+//        hasPermission = isGranted
+//    }
+//
+//    LaunchedEffect(hasPermission) {
+//        if (!hasPermission) {
+//            launcher.launch(permissionToRequest)
+//        }
+//    }
 }
