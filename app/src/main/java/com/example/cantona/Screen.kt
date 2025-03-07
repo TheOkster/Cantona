@@ -19,12 +19,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,8 +57,14 @@ enum class TimeUnit{
 }
 @Composable
 fun AlbumsScreen(albumMap: Map<Long, Album>, navController: NavController, viewModel: CantonaViewModel, modifier: Modifier = Modifier){
-    Box() {
-        LazyVerticalGrid(columns = GridCells.Adaptive(minSize = 200.dp), modifier = modifier) {
+    Scaffold(bottomBar= {
+        PlayButton(
+            viewModel,
+            navController,
+            modifier = Modifier.fillMaxWidth().fillMaxHeight(0.08f)
+        )
+    }){ padding ->
+        LazyVerticalGrid(columns = GridCells.Adaptive(minSize = 200.dp), modifier = modifier.padding(padding)) {
             items(albumMap.values.toList()) {
                 AlbumBlock(
                     album = it, onClick = {
@@ -63,10 +73,24 @@ fun AlbumsScreen(albumMap: Map<Long, Album>, navController: NavController, viewM
                 )
             }
         }
-        PlayButton(viewModel, navController, modifier = Modifier
-            .align(Alignment.BottomCenter)
-            .navigationBarsPadding().fillMaxWidth().background(MaterialTheme.colorScheme.surface).fillMaxHeight(.05f))
     }
+//    Column(modifier=Modifier.fillMaxSize()){
+////        LazyVerticalGrid(columns = GridCells.Adaptive(minSize = 200.dp), modifier = modifier) {
+////            items(albumMap.values.toList()) {
+////                AlbumBlock(
+////                    album = it, onClick = {
+////                        navController.navigate("${Screen.Songs.name}/${it.albumId}")
+////                    }
+////                )
+////            }
+////        }
+//        PlayButton(
+//            viewModel,
+//            navController,
+//            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
+//                .fillMaxHeight(.05f)
+//        )
+//    }
 }
 @Composable
 fun SongsScreen(album: Album, viewModel: CantonaViewModel, modifier: Modifier = Modifier){
@@ -93,7 +117,7 @@ fun SongsScreen(album: Album, viewModel: CantonaViewModel, modifier: Modifier = 
                     fontSize = 18.sp,
                 )
             }
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(8.dp))
             LazyColumn(modifier = modifier) {
                 items(album.songs) { it ->
                     SongDisplay(

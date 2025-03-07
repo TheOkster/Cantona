@@ -39,15 +39,23 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -96,9 +104,12 @@ fun PlayButton(viewModel: CantonaViewModel, navController: NavController, modifi
     val metadata by viewModel.metadataState.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val iconColor = MaterialTheme.colorScheme.onSurface
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth().clickable(onClick = {
-        navController.navigate(Screen.CurrentlyPlaying.name)
-    })){
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier
+        .fillMaxWidth()
+        .clickable(onClick = {
+            navController.navigate(Screen.CurrentlyPlaying.name)
+        })){
+        Log.d("PlayButton","Should be loading")
         Text("${metadata.title ?: "Unknown"}", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.weight(0.15f))
 
@@ -107,7 +118,9 @@ fun PlayButton(viewModel: CantonaViewModel, navController: NavController, modifi
 
         // TODO: change to use resource strings
         Row(horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxHeight().padding(end=12.dp)) {
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(end = 12.dp)) {
             Icon(
                 painterResource(R.drawable.baseline_fast_rewind_24),
                 "Rewind",
@@ -144,9 +157,29 @@ fun CantonaApp(viewModel: CantonaViewModel) {
         if(entry.key != null) albumMap[entry.key!!] = getAlbum(context, entry.key!!, entry.value)
     }
     RequestPermissions()
-    Scaffold(modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)){ it ->
+    Scaffold(modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars), bottomBar={
+        val navBarItems = listOf("Artists", "Playlists")
+        val navBarSelIcons = listOf(Icons.Filled.Home, Icons.Filled.Search)
+        val navBarUnselIcons = listOf(Icons.Outlined.Home, Icons.Outlined.Search)
+        var selectedItem by remember { mutableIntStateOf(0) }
+        NavigationBar {
+            navBarItems.forEachIndexed { index, item ->
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            if (selectedItem == index) navBarSelIcons[index] else navBarUnselIcons[index],
+                            contentDescription = item
+                        )
+                    },
+                    label = { Text(item) },
+                    selected = selectedItem == index,
+                    onClick = { selectedItem = index }
+                )
+            }}
+    }
+    ){ padding ->
         val navController = rememberNavController()
-        NavHost(navController = navController, startDestination = Screen.Albums.name) {
+        NavHost(navController = navController, startDestination = Screen.Albums.name, modifier=Modifier.padding(padding)) {
             composable(Screen.Albums.name) {
                 AlbumsScreen(albumMap, navController, viewModel)
             }
@@ -159,7 +192,8 @@ fun CantonaApp(viewModel: CantonaViewModel) {
                 // TODO: switch to make vertical alignment dependent on the component itself
             }
         }
-    }
+        }
+
 }
 
 
