@@ -28,12 +28,18 @@ class CantonaViewModel(exoPlayer: ExoPlayer) : ViewModel() {
             override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
                 _metadataState.value = mediaMetadata
             }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                _currentMedia.value = mediaItem
+            }
         })
     }
 
     private val _metadataState = MutableStateFlow(MediaMetadata.Builder().build())
     val metadataState = _metadataState.asStateFlow()
 
+    private val _currentMedia = MutableStateFlow<MediaItem?>(null)
+    val currentMedia = _currentMedia.asStateFlow()
     fun play(uri: Uri) {
         val mediaItem = MediaItem.fromUri(uri)
         player.setMediaItem(mediaItem)

@@ -100,6 +100,20 @@ fun AlbumArt(albumId: Long, modifier: Modifier = Modifier) {
         placeholder = painterResource(id = R.drawable.default_album) // Placeholder
     )
 }
+@Composable
+fun AlbumArt(uri: Uri, modifier: Modifier = Modifier) {
+    AsyncImage(
+        model = uri,
+        contentDescription = "Album Art",
+        modifier = modifier
+            .size(120.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surface),
+        contentScale = ContentScale.Crop,
+        error = painterResource(id = R.drawable.default_album), // Fallback image
+        placeholder = painterResource(id = R.drawable.default_album) // Placeholder
+    )
+}
 fun getAlbumArtUri(albumId: Long): Uri {
     return Uri.parse("content://media/external/audio/albumart/$albumId")
 }

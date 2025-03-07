@@ -72,7 +72,8 @@ import com.example.compose.CantonaTheme
 
 enum class Screen(){
     Albums,
-    Songs
+    Songs,
+    CurrentlyPlaying
 }
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -91,11 +92,13 @@ class MainActivity : ComponentActivity() {
     }
 }
 @Composable
-fun PlayButton(viewModel: CantonaViewModel, modifier: Modifier = Modifier){
+fun PlayButton(viewModel: CantonaViewModel, navController: NavController, modifier: Modifier = Modifier){
     val metadata by viewModel.metadataState.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val iconColor = MaterialTheme.colorScheme.onSurface
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()){
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth().clickable(onClick = {
+        navController.navigate(Screen.CurrentlyPlaying.name)
+    })){
         Text("${metadata.title ?: "Unknown"}", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.weight(0.15f))
 
@@ -126,6 +129,7 @@ fun PlayButton(viewModel: CantonaViewModel, modifier: Modifier = Modifier){
                 tint = iconColor
             ) // Not Functional
         }
+
     }
 }
 @Composable
@@ -149,6 +153,10 @@ fun CantonaApp(viewModel: CantonaViewModel) {
             composable("${Screen.Songs.name}/{albumId}") { backStackEntry ->
                 val albumId = backStackEntry.arguments?.getString("albumId")?.toLongOrNull() ?: return@composable
                 albumMap[albumId]?.let { it1 -> SongsScreen(it1, viewModel) }
+            }
+            composable(Screen.CurrentlyPlaying.name) { backStackEntry ->
+               CurrentlyPlayingScreen(viewModel)
+                // TODO: switch to make vertical alignment dependent on the component itself
             }
         }
     }
@@ -213,6 +221,14 @@ fun getAudioFiles(context: Context): List<Song> {
     }
     return audioList
 }
+fun getAlbumIdFromUri(context: Context, uri: Uri): Long? {
+    context.contentResolver.query(uri, arrayOf(Media.ALBUM_ID),
+        null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst()) return cursor.getLong(cursor.getColumnIndexOrThrow(Media.ALBUM_ID))
+    }
+    return null
+}
+
 @Composable
 fun RequestPermissions() {
     val context = LocalContext.current
